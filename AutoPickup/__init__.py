@@ -14,6 +14,18 @@ class MyMod(ModMenu.SDKMod):
     Pickinup = False
     pickups = ["GD_Ammodrops.Pickups", "GD_Ammodrops.Pickups_BossOnly", "GD_Currency.A_Item", "GD_BuffDrinks.A_Item", "GD_Iris_TorgueToken.UsableItems.Pickup_TorgueToken"] #Item full definition names to pickup
     
+    def __init__(self) -> None:
+        self.itemsNum = ModMenu.Options.Slider (
+            Caption="Items to check",
+            Description="Specifies the maximum number of recently dropped items to check. Large values may cause performance issues.",
+            StartingValue=50,
+            MinValue=50,
+            MaxValue=255,
+            Increment=1,
+            IsHidden=False
+        )
+        self.Options = [self.itemsNum]
+
     def Enable(self) -> None:
         super().Enable()
         
@@ -28,7 +40,7 @@ class MyMod(ModMenu.SDKMod):
     @ModMenu.Hook("WillowGame.WillowPlayerController.PlayerTick")
     def onSpawn(self, caller: unrealsdk.UObject, function: unrealsdk.UFunction, params: unrealsdk.FStruct) -> bool:
         maxDist = caller.GetWillowGlobals().GetGlobalsDefinition().PlayerInteractionDistance
-        for pickup in caller.GetWillowGlobals().PickupList:
+        for pickup in caller.GetWillowGlobals().PickupList[-self.itemsNum.CurrentValue:]:
             if pickup.Inventory.Class == unrealsdk.FindClass("WillowUsableItem"):
                 distance = self.dist(pickup.Location, caller.CalcViewActorLocation)
                 if distance <= maxDist: #Check if item is within Player pickup range
